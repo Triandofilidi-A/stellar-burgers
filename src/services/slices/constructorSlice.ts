@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 
 import { orderBurgerApi } from '../../utils/burger-api';
 
@@ -56,25 +56,34 @@ const constructorSlice = createSlice({
   name: 'constructor',
   initialState,
   reducers: {
-    addBun: (state, action: { payload: TIngredient }) => {
-      state.bun = {
-        ...action.payload,
-        id: generateUniqueId(),
-      } as TConstructorIngredient;
-      state.orderError = null;
+    addBun: {
+      reducer: (state, action: PayloadAction<TConstructorIngredient>) => {
+        state.bun = action.payload;
+        state.orderError = null;
+      },
+      prepare: (ingredient: TIngredient) => ({
+        payload: {
+          ...ingredient,
+          id: generateUniqueId(),
+        } as TConstructorIngredient,
+      }),
     },
-    addIngredient: (state, action: { payload: TIngredient }) => {
-      const newIngredient: TConstructorIngredient = {
-        ...action.payload,
-        id: generateUniqueId(),
-      };
-      state.ingredients.push(newIngredient);
-      state.orderError = null;
+    addIngredient: {
+      reducer: (state, action: PayloadAction<TConstructorIngredient>) => {
+        state.ingredients.push(action.payload);
+        state.orderError = null;
+      },
+      prepare: (ingredient: TIngredient) => ({
+        payload: {
+          ...ingredient,
+          id: generateUniqueId(),
+        } as TConstructorIngredient,
+      }),
     },
-    removeIngredient: (state, action: { payload: number }) => {
+    removeIngredient: (state, action: PayloadAction<number>) => {
       state.ingredients.splice(action.payload, 1);
     },
-    moveIngredient: (state, action: { payload: { from: number; to: number } }) => {
+    moveIngredient: (state, action: PayloadAction<{ from: number; to: number }>) => {
       const { from, to } = action.payload;
       const [moved] = state.ingredients.splice(from, 1);
       state.ingredients.splice(to, 0, moved);
@@ -141,4 +150,5 @@ export const selectOrderError = (state: RootState): string | null =>
   state.burgerConstructor.orderError ?? null;
 
 export const constructorReducer = constructorSlice.reducer;
+
 export default constructorReducer;

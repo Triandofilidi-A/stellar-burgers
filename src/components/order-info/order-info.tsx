@@ -1,15 +1,16 @@
 import { Preloader, OrderInfoUI } from '@ui';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { selectFeedOrders } from '../../services/slices/feedSlice';
+import { selectFeedOrders, fetchOrderByNumber } from '../../services/slices/feedSlice';
 import { selectIngredients } from '../../services/slices/ingredientsSlice';
-import { useSelector } from '../../services/store';
+import { useDispatch, useSelector } from '../../services/store';
 
 import type { TIngredient } from '@utils-types';
 
 export const OrderInfo = (): React.JSX.Element => {
   const { number } = useParams<{ number: string }>();
+  const dispatch = useDispatch();
   const orders = useSelector(selectFeedOrders);
   const ingredients = useSelector(selectIngredients);
 
@@ -17,6 +18,12 @@ export const OrderInfo = (): React.JSX.Element => {
     if (!number) return null;
     return orders.find((order) => order.number === Number(number)) ?? null;
   }, [orders, number]);
+
+  useEffect(() => {
+    if (number && !orderData) {
+      void dispatch(fetchOrderByNumber(Number(number)));
+    }
+  }, [dispatch, number, orderData]);
 
   const orderInfo = useMemo(() => {
     if (!orderData || !ingredients.length) return null;

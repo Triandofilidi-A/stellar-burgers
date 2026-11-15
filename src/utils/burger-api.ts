@@ -11,11 +11,6 @@ type TServerResponse<T = unknown> = {
   success: boolean;
 } & T;
 
-/**
- * The API signals failure with a JSON payload rather than an HTTP error, so the
- * payload is wrapped in a real Error before rejecting. The original body is
- * kept in `cause` for debugging.
- */
 const toApiError = (payload: unknown): Error => {
   const message =
     typeof payload === 'object' &&

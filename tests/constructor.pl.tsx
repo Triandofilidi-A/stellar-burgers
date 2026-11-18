@@ -1,5 +1,149 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
-test.describe('add ingredients to constructor works correctly', function () {
+test.describe('Добавление ингредиентов в конструктор', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.routeFromHAR('./tests/hars/ingredients.har', {
+      url: '**/api/ingredients*',
+      update: false,
+    });
 
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: /Булки/i })).toBeVisible();
+  });
+
+  test('добавление начинки в конструктор', async ({ page }) => {
+    const fillingCard = page
+      .locator('li')
+      .filter({ hasText: /Говяжий метеорит/i })
+      .first();
+
+    await fillingCard.getByRole('button', { name: /Добавить/i }).click();
+
+    const constructor = page.locator('ul[class*="elements"]');
+
+    await expect(constructor.getByText('Говяжий метеорит')).toBeVisible();
+  });
+
+  test('добавление булки в конструктор', async ({ page }) => {
+    const bunCard = page.locator('li').filter({ hasText: /булка/i }).first();
+
+    const bunName = (await bunCard.locator('p').last().innerText()).trim();
+
+    await bunCard.getByRole('button', { name: /Добавить/i }).click();
+    await expect(page.getByText(`${bunName} (верх)`)).toBeVisible();
+    await expect(page.getByText(`${bunName} (низ)`)).toBeVisible();
+  });
+});
+
+test.describe('Модальные окна ингридиентов', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.routeFromHAR('./tests/hars/ingredients.har', {
+      url: '**/api/ingredients*',
+      update: false,
+    });
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: /Булки/i })).toBeVisible();
+  });
+
+  test('открытие и закрытие модального окна по крестику', async ({ page }) => {
+    const firstIngredientCard = page
+      .locator('li')
+      .filter({ has: page.getByRole('button', { name: /Добавить/i }) })
+      .first();
+
+    const ingredientName = (
+      await firstIngredientCard.locator('p').last().innerText()
+    ).trim();
+    await firstIngredientCard.click();
+    await expect(page.getByText('Калории, ккал')).toBeVisible();
+    await expect(page.getByRole('heading', { name: ingredientName })).toBeVisible();
+    await page.getByRole('button', { name: 'Закрыть' }).click();
+    await expect(page.getByText('Калории, ккал')).not.toBeVisible();
+    await expect(page.getByRole('heading', { name: ingredientName })).not.toBeVisible();
+  });
+
+  test('закрытие модального окна ингридиента по клику на  оверлей', async ({ page }) => {
+    const firstIngredientCard = page
+      .locator('li')
+      .filter({ has: page.getByRole('button', { name: /Добавить/i }) })
+      .first();
+
+    const ingredientName = (
+      await firstIngredientCard.locator('p').last().innerText()
+    ).trim();
+    await firstIngredientCard.click();
+    await expect(page.getByText('Калории, ккал')).toBeVisible();
+    await page.getByTestId('modal-overlay').click({ position: { x: 10, y: 10 } });
+    await expect(page.getByText('Калории, ккал')).not.toBeVisible();
+    await expect(page.getByRole('heading', { name: ingredientName })).not.toBeVisible();
+  });
+});
+
+test.describe('Создание заказа', () => {
+  const fakeAuth = async ({
+    page,
+    context,
+  }: {
+    page: import('@playwright/test').Page;
+    context: import('@playwright/test').BrowserContext;
+  }) => {
+    await context.addCookies([
+      {
+        name: 'accessToken',
+        value: 'fake-access-token',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
+
+    await page.addInitScript(() => {
+      localStorage.setItem('refreshToken', 'fake-refresh-token');
+    });
+  };
+
+  test.beforeEach(async ({ page, context }) => {
+    await page.routeFromHAR('./tests/hars/ingredients.har', {
+      url: '**/api/ingredients*',
+      update: false,
+    });
+    await page.routeFromHAR('./tests/hars/user.har', {
+      url: '**/api/auth/user*',
+      update: false,
+    });
+    await page.routeFromHAR('./tests/hars/order.har', {
+      url: '**/api/orders*',
+      update: false,
+    });
+    await fakeAuth({ page, context });
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: /Булки/i })).toBeVisible();
+  });
+
+  test('успешное оформление заказа и очистка конструктора', async ({ page }) => {
+    const bunCard = page
+      .locator('li')
+      .filter({ has: page.getByRole('button', { name: /Добавить/i }) })
+      .first();
+    await bunCard.getByRole('button', { name: /Добавить/i }).click();
+
+    const fillingCard = page
+      .locator('li')
+      .filter({ hasText: /Говяжий метеорит/i })
+      .first();
+    await fillingCard.getByRole('button', { name: /Добавить/i }).click();
+    await expect(page.getByText(/верх/)).toBeVisible();
+    await expect(page.getByText(/низ/)).toBeVisible();
+
+    const orderResponse = page.waitForResponse(
+      (r) => r.url().includes('/api/orders') && r.request().method() === 'POST'
+    );
+
+    await page.getByRole('button', { name: /Оформить заказ/i }).click();
+    await orderResponse;
+    await expect(page.getByRole('heading', { name: '1181' })).toBeVisible();
+    await expect(page.getByText('Выберите булки')).toHaveCount(2);
+    await expect(page.getByText('Выберите начинку')).toHaveCount(1);
+    await page.getByRole('button', { name: 'Закрыть' }).click();
+    await expect(page.getByRole('heading', { name: '1181' })).not.toBeVisible();
+  });
 });

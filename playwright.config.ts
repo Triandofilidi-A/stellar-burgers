@@ -13,7 +13,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
-  testMatch: '*.pl.tsx',
+  testMatch: '**/*.pl.tsx',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -76,5 +76,5 @@ export default defineConfig({
     command: 'npm run start',
     url: 'http://localhost:4000',
     reuseExistingServer: !process.env.CI,
-  }
+  },
 });

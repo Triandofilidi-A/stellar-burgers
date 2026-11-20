@@ -20,7 +20,7 @@ jobs:
       - name: Run Playwright tests
         run: npx playwright test
         env:
-          BURGER_API_URL: https://norma.ffapi.ru
+          BURGER_API_URL: https://norma.ffapi.ru/api
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:

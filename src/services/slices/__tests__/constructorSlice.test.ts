@@ -124,12 +124,25 @@ describe('Тесты редьюсера constructorSlice', () => {
   test('должен полностью сбрасывать состояние конструктора (resetConstructor)', () => {
     let state = constructorReducer(initialState, addBun(mockBun));
     state = constructorReducer(state, addIngredient(mockIngredient1));
-    state = constructorReducer(state, {
-      type: createOrder.fulfilled.type,
-      payload: { name: 'Заказ', number: 123 } as TOrder,
-    });
+    state = constructorReducer(state, addIngredient(mockIngredient2));
 
-    const result = constructorReducer(state, resetConstructor());
+    const stateWithAllFields: TConstructorState = {
+      ...state,
+      orderModalData: { name: 'Тестовый заказ', number: 999 } as TOrder,
+      orderError: 'Тестовая ошибка',
+    };
+
+    expect(stateWithAllFields.bun).toEqual(
+      expect.objectContaining({ ...mockBun, id: expect.any(String) })
+    );
+    expect(stateWithAllFields.ingredients).toHaveLength(2);
+    expect(stateWithAllFields.orderModalData).toEqual({
+      name: 'Тестовый заказ',
+      number: 999,
+    });
+    expect(stateWithAllFields.orderError).toBe('Тестовая ошибка');
+
+    const result = constructorReducer(stateWithAllFields, resetConstructor());
     expect(result.bun).toBeNull();
     expect(result.ingredients).toEqual([]);
     expect(result.orderModalData).toBeNull();

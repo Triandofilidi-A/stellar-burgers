@@ -6,7 +6,10 @@ test.describe('Добавление ингредиентов в конструк
       url: '**/api/ingredients*',
       update: false,
     });
-
+    await page.routeFromHAR('./tests/hars/user.har', {
+      url: '**/api/auth/user*',
+      update: false,
+    });
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /Булки/i })).toBeVisible();
   });
@@ -35,26 +38,31 @@ test.describe('Добавление ингредиентов в конструк
   });
 });
 
-test.describe('Модальные окна ингридиентов', () => {
+test.describe('Модальные окна ингредиентов', () => {
   test.beforeEach(async ({ page }) => {
     await page.routeFromHAR('./tests/hars/ingredients.har', {
       url: '**/api/ingredients*',
+      update: false,
+    });
+    await page.routeFromHAR('./tests/hars/user.har', {
+      url: '**/api/auth/user*',
       update: false,
     });
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /Булки/i })).toBeVisible();
   });
 
-  test('открытие и закрытие модального окна по крестику', async ({ page }) => {
-    const firstIngredientCard = page
+  test('открытие и закрытие модального окна ингредиента по крестику', async ({
+    page,
+  }) => {
+    const targetCard = page
       .locator('li')
-      .filter({ has: page.getByRole('button', { name: /Добавить/i }) })
+      .filter({ hasText: /Говяжий метеорит/i })
       .first();
 
-    const ingredientName = (
-      await firstIngredientCard.locator('p').last().innerText()
-    ).trim();
-    await firstIngredientCard.click();
+    const ingredientName = (await targetCard.locator('p').last().innerText()).trim();
+
+    await targetCard.locator('a').click();
     await expect(page.getByText('Калории, ккал')).toBeVisible();
     await expect(page.getByRole('heading', { name: ingredientName })).toBeVisible();
     await page.getByRole('button', { name: 'Закрыть' }).click();
@@ -62,17 +70,16 @@ test.describe('Модальные окна ингридиентов', () => {
     await expect(page.getByRole('heading', { name: ingredientName })).not.toBeVisible();
   });
 
-  test('закрытие модального окна ингридиента по клику на  оверлей', async ({ page }) => {
-    const firstIngredientCard = page
+  test('закрытие модального окна ингредиента по клику на оверлей', async ({ page }) => {
+    const targetCard = page
       .locator('li')
-      .filter({ has: page.getByRole('button', { name: /Добавить/i }) })
+      .filter({ hasText: /Соус фирменный Space Sauce/i })
       .first();
 
-    const ingredientName = (
-      await firstIngredientCard.locator('p').last().innerText()
-    ).trim();
-    await firstIngredientCard.click();
+    const ingredientName = (await targetCard.locator('p').last().innerText()).trim();
+    await targetCard.click();
     await expect(page.getByText('Калории, ккал')).toBeVisible();
+    await expect(page.getByRole('heading', { name: ingredientName })).toBeVisible();
     await page.getByTestId('modal-overlay').click({ position: { x: 10, y: 10 } });
     await expect(page.getByText('Калории, ккал')).not.toBeVisible();
     await expect(page.getByRole('heading', { name: ingredientName })).not.toBeVisible();
@@ -86,7 +93,7 @@ test.describe('Создание заказа', () => {
   }: {
     page: import('@playwright/test').Page;
     context: import('@playwright/test').BrowserContext;
-  }) => {
+  }): Promise<void> => {
     await context.addCookies([
       {
         name: 'accessToken',
@@ -95,7 +102,6 @@ test.describe('Создание заказа', () => {
         path: '/',
       },
     ]);
-
     await page.addInitScript(() => {
       localStorage.setItem('refreshToken', 'fake-refresh-token');
     });

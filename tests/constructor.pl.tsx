@@ -1,15 +1,23 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+const setupHAR = async (page: Page): Promise<void> => {
+  await page.routeFromHAR('./tests/hars/ingredients.har', {
+    url: '**/api/ingredients*',
+    update: false,
+  });
+  await page.routeFromHAR('./tests/hars/user.har', {
+    url: '**/api/auth/user*',
+    update: false,
+  });
+  await page.routeFromHAR('./tests/hars/order.har', {
+    url: '**/api/orders*',
+    update: false,
+  });
+};
 
 test.describe('Добавление ингредиентов в конструктор', () => {
   test.beforeEach(async ({ page }) => {
-    await page.routeFromHAR('./tests/hars/ingredients.har', {
-      url: '**/api/ingredients*',
-      update: false,
-    });
-    await page.routeFromHAR('./tests/hars/user.har', {
-      url: '**/api/auth/user*',
-      update: false,
-    });
+    await setupHAR(page);
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /Булки/i })).toBeVisible();
   });
@@ -40,14 +48,7 @@ test.describe('Добавление ингредиентов в конструк
 
 test.describe('Модальные окна ингредиентов', () => {
   test.beforeEach(async ({ page }) => {
-    await page.routeFromHAR('./tests/hars/ingredients.har', {
-      url: '**/api/ingredients*',
-      update: false,
-    });
-    await page.routeFromHAR('./tests/hars/user.har', {
-      url: '**/api/auth/user*',
-      update: false,
-    });
+    await setupHAR(page);
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /Булки/i })).toBeVisible();
   });
@@ -61,13 +62,15 @@ test.describe('Модальные окна ингредиентов', () => {
       .first();
 
     const ingredientName = (await targetCard.locator('p').last().innerText()).trim();
-
     await targetCard.locator('a').click();
-    await expect(page.getByText('Калории, ккал')).toBeVisible();
-    await expect(page.getByRole('heading', { name: ingredientName })).toBeVisible();
-    await page.getByRole('button', { name: 'Закрыть' }).click();
-    await expect(page.getByText('Калории, ккал')).not.toBeVisible();
-    await expect(page.getByRole('heading', { name: ingredientName })).not.toBeVisible();
+
+    const modals = page.locator('#modals');
+    await expect(
+      modals.getByRole('heading', { name: ingredientName, exact: true })
+    ).toBeVisible();
+    await expect(modals.getByText('Калории, ккал')).toBeVisible();
+    await modals.getByRole('button', { name: 'Закрыть' }).click();
+    await expect(modals).toBeEmpty();
   });
 
   test('закрытие модального окна ингредиента по клику на оверлей', async ({ page }) => {
@@ -77,12 +80,16 @@ test.describe('Модальные окна ингредиентов', () => {
       .first();
 
     const ingredientName = (await targetCard.locator('p').last().innerText()).trim();
-    await targetCard.click();
-    await expect(page.getByText('Калории, ккал')).toBeVisible();
-    await expect(page.getByRole('heading', { name: ingredientName })).toBeVisible();
+
+    await targetCard.locator('a').click();
+
+    const modals = page.locator('#modals');
+    await expect(
+      modals.getByRole('heading', { name: ingredientName, exact: true })
+    ).toBeVisible();
+    await expect(modals.getByText('Калории, ккал')).toBeVisible();
     await page.getByTestId('modal-overlay').click({ position: { x: 10, y: 10 } });
-    await expect(page.getByText('Калории, ккал')).not.toBeVisible();
-    await expect(page.getByRole('heading', { name: ingredientName })).not.toBeVisible();
+    await expect(modals).toBeEmpty();
   });
 });
 
@@ -108,18 +115,7 @@ test.describe('Создание заказа', () => {
   };
 
   test.beforeEach(async ({ page, context }) => {
-    await page.routeFromHAR('./tests/hars/ingredients.har', {
-      url: '**/api/ingredients*',
-      update: false,
-    });
-    await page.routeFromHAR('./tests/hars/user.har', {
-      url: '**/api/auth/user*',
-      update: false,
-    });
-    await page.routeFromHAR('./tests/hars/order.har', {
-      url: '**/api/orders*',
-      update: false,
-    });
+    await setupHAR(page);
     await fakeAuth({ page, context });
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /Булки/i })).toBeVisible();

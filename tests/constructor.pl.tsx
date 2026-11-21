@@ -142,10 +142,14 @@ test.describe('Создание заказа', () => {
 
     await page.getByRole('button', { name: /Оформить заказ/i }).click();
     await orderResponse;
-    await expect(page.getByRole('heading', { name: '1181' })).toBeVisible();
+    const modals = page.locator('#modals');
+    await expect(
+      modals.getByRole('heading', { name: '1181', exact: true })
+    ).toBeVisible();
     await expect(page.getByText('Выберите булки')).toHaveCount(2);
     await expect(page.getByText('Выберите начинку')).toHaveCount(1);
-    await page.getByRole('button', { name: 'Закрыть' }).click();
-    await expect(page.getByRole('heading', { name: '1181' })).not.toBeVisible();
+    await modals.getByRole('button', { name: 'Закрыть' }).click();
+    await expect(modals).toBeEmpty();
   });
 });
+

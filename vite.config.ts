@@ -35,9 +35,11 @@ export default defineConfig(({ mode }) => {
     css: {
       modules: { generateScopedName }
     },
+    
     define: {
       'process.env.BURGER_API_URL': JSON.stringify(env.BURGER_API_URL ?? '')
     },
+    
     server: {
       open: true
     },

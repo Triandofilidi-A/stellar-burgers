@@ -1,0 +1,60 @@
+{
+  "success": true,
+  "name": "Краторный метеоритный бургер",
+  "order": {
+    "_id": "6afdb220d52992ca5ffe7433",
+    "number": 1181,
+    "name": "Краторный метеоритный бургер",
+    "ingredients": [
+      {
+        "_id": "6acd6b8163765e371c0bd9eb",
+        "name": "Краторная булка N-200i",
+        "type": "bun",
+        "proteins": 80,
+        "fat": 24,
+        "carbohydrates": 53,
+        "calories": 420,
+        "price": 1255,
+        "image": "https://norma.ffapi.ru/images/bun-02.png",
+        "image_mobile": "https://norma.ffapi.ru/images/bun-02-mobile.png",
+        "image_large": "https://norma.ffapi.ru/images/bun-02-large.png"
+      },
+      {
+        "_id": "6acd6b8163765e9acf0bd9ef",
+        "name": "Говяжий метеорит (отбивная)",
+        "type": "main",
+        "proteins": 800,
+        "fat": 800,
+        "carbohydrates": 300,
+        "calories": 2674,
+        "price": 3000,
+        "image": "https://norma.ffapi.ru/images/meat-04.png",
+        "image_mobile": "https://norma.ffapi.ru/images/meat-04-mobile.png",
+        "image_large": "https://norma.ffapi.ru/images/meat-04-large.png"
+      },
+      {
+        "_id": "6acd6b8163765e371c0bd9eb",
+        "name": "Краторная булка N-200i",
+        "type": "bun",
+        "proteins": 80,
+        "fat": 24,
+        "carbohydrates": 53,
+        "calories": 420,
+        "price": 1255,
+        "image": "https://norma.ffapi.ru/images/bun-02.png",
+        "image_mobile": "https://norma.ffapi.ru/images/bun-02-mobile.png",
+        "image_large": "https://norma.ffapi.ru/images/bun-02-large.png"
+      }
+    ],
+    "owner": {
+      "name": "Короткова Настасья",
+      "email": "test@test.ru",
+      "createdAt": "2026-11-01T11:23:39.372Z",
+      "updatedAt": "2026-11-18T13:31:14.324Z"
+    },
+    "status": "done",
+    "createdAt": "2026-11-18T14:11:44.144Z",
+    "updatedAt": "2026-11-18T14:11:44.147Z",
+    "price": 5510
+  }
+}
